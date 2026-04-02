@@ -273,44 +273,47 @@ tbody td{padding:10px 14px;vertical-align:middle;}
     </div>
 
     <div class="kpi2-row">
-      <div class="kpi-card"><div class="kpi-label">Incidencias activas</div><div class="kpi-val" id="kpi-activas" style="color:var(--red)">0</div><div class="kpi-sub">en curso ahora</div></div>
-      <div class="kpi-card"><div class="kpi-label">Críticas sin resolver</div><div class="kpi-val" id="kpi-criticas" style="color:var(--red)">0</div><div class="kpi-sub">atención inmediata</div></div>
-      <div class="kpi-card"><div class="kpi-label">Tiempo promedio cierre</div><div class="kpi-val" id="kpi-tiempo" style="color:var(--orange)">—</div><div class="kpi-sub">todas las prioridades</div></div>
-      <div class="kpi-card"><div class="kpi-label">Tasa de resolución</div><div class="kpi-val" id="kpi-tasa" style="color:var(--green)">0%</div><div class="kpi-sub">finalizadas / total</div></div>
-    </div>
-
-    <div class="kpi2-row">
-      <div class="kpi-card"><div class="kpi-label">Críticos resueltos &lt;4h</div><div class="kpi-val" id="kpi-criticos-4h" style="color:var(--green)">—</div><div class="kpi-sub">objetivo: 80%</div></div>
-      <div class="kpi-card"><div class="kpi-label">Promedio simultáneas</div><div class="kpi-val" id="kpi-simultaneas">—</div><div class="kpi-sub">por mecánico activo</div></div>
-      <div class="kpi-card"><div class="kpi-label">Objetivo más crítico</div><div class="kpi-val" id="kpi-obj-critico" style="font-size:14px;padding-top:4px">—</div><div class="kpi-sub" id="kpi-obj-critico-sub">—</div></div>
-      <div class="kpi-card"><div class="kpi-label">Falla más frecuente</div><div class="kpi-val" id="kpi-falla-top" style="font-size:14px;padding-top:4px">—</div><div class="kpi-sub" id="kpi-falla-top-sub">del total</div></div>
+      <div class="kpi-card"><div class="kpi-label">Activas ahora</div><div class="kpi-val" id="kpi-activas" style="color:var(--red)">0</div><div class="kpi-sub">incidencias en curso</div></div>
+      <div class="kpi-card"><div class="kpi-label">Críticas sin resolver</div><div class="kpi-val" id="kpi-criticas" style="color:var(--red)">0</div><div class="kpi-sub">requieren atención ya</div></div>
+      <div class="kpi-card"><div class="kpi-label">Esta semana</div><div class="kpi-val" id="kpi-semana" style="color:var(--orange)">0</div><div class="kpi-sub" id="kpi-semana-sub">vs semana anterior</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tasa de resolución</div><div class="kpi-val" id="kpi-tasa" style="color:var(--green)">0%</div><div class="kpi-sub" id="kpi-tasa-sub">finalizadas / total</div></div>
     </div>
 
     <div class="ind-grid3">
       <div class="ind-card2" style="grid-column:span 2">
-        <div class="ind-title">Incidencias críticas y altas activas</div>
-        <div id="ind-criticas-lista"></div>
+        <div class="ind-title">Alertas activas — críticas y altas</div>
+        <div id="ind-alertas"></div>
       </div>
       <div class="ind-card2">
-        <div class="ind-title">Estado general</div>
-        <div id="ind-estados-lista"></div>
+        <div class="ind-title">Carga por mecánico</div>
+        <div id="ind-carga-mec-d"></div>
       </div>
     </div>
 
     <div class="ind-grid3">
       <div class="ind-card2">
-        <div class="ind-title">Carga por mecánico</div>
-        <div id="ind-carga-mec-d"></div>
+        <div class="ind-title">Fallas más frecuentes</div>
+        <div id="ind-fallas-freq"></div>
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)">El service es la falla más evitable — indica falta de mantenimiento preventivo</div>
       </div>
       <div class="ind-card2">
-        <div class="ind-title">Tiempo por prioridad · Tipo de falla</div>
-        <div id="ind-tiempo-pri-d"></div>
-        <div class="sec-div" id="ind-falla-d"></div>
+        <div class="ind-title">Objetivos con más incidencias</div>
+        <div id="ind-obj-freq"></div>
       </div>
       <div class="ind-card2">
-        <div class="ind-title">Frecuencia por objetivo · Rendimiento</div>
-        <div id="ind-obj-freq-d"></div>
-        <div class="sec-div" id="ind-rend-d"></div>
+        <div class="ind-title">Tiempo promedio por tipo de equipo</div>
+        <div id="ind-tiempo-equipo"></div>
+      </div>
+    </div>
+
+    <div class="ind-grid3">
+      <div class="ind-card2" style="grid-column:span 2">
+        <div class="ind-title">Service vs falla real — composición del trabajo</div>
+        <div id="ind-service-vs-falla"></div>
+      </div>
+      <div class="ind-card2">
+        <div class="ind-title">Esta semana vs anterior</div>
+        <div id="ind-semana-comp"></div>
       </div>
     </div>
 
@@ -660,109 +663,137 @@ async function toggleMec(id,activo){
 function renderIndicadores(){
   const act=incidencias.filter(i=>i.estado!=='finalizado');
   const fin=incidencias.filter(i=>i.estado==='finalizado');
-  const ini2=(n)=>{if(!n)return'?';return n.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();};
+  const ahora=new Date();
+  const semanaMs=7*24*3600000;
+  const estaSemanaCut=new Date(ahora-semanaMs);
+  const antSemanaCut=new Date(ahora-2*semanaMs);
+  const estaSemana=incidencias.filter(i=>new Date(i.created_at)>=estaSemanaCut).length;
+  const antSemana=incidencias.filter(i=>{const d=new Date(i.created_at);return d>=antSemanaCut&&d<estaSemanaCut;}).length;
+  const diff=estaSemana-antSemana;
 
-  // KPIs fila 1
   document.getElementById('kpi-activas').textContent=act.length;
   document.getElementById('kpi-criticas').textContent=act.filter(i=>i.prioridad==='critico').length;
-  const tiempos=fin.filter(i=>i.fecha_finalizado).map(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000);
-  document.getElementById('kpi-tiempo').textContent=tiempos.length?Math.round(tiempos.reduce((a,b)=>a+b,0)/tiempos.length)+'h':'—';
+  document.getElementById('kpi-semana').textContent=estaSemana;
+  document.getElementById('kpi-semana-sub').innerHTML='vs semana anterior <span style="font-weight:500;color:'+(diff>0?'var(--red)':'var(--green)')+'">'+( diff>0?'+':'')+diff+'</span>';
   document.getElementById('kpi-tasa').textContent=incidencias.length?Math.round((fin.length/incidencias.length)*100)+'%':'0%';
+  document.getElementById('kpi-tasa-sub').textContent=fin.length+' finalizadas / '+incidencias.length+' total';
 
-  // KPIs fila 2
-  const criticosFin=fin.filter(i=>i.prioridad==='critico'&&i.fecha_finalizado);
-  const criticos4h=criticosFin.filter(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000<=4);
-  document.getElementById('kpi-criticos-4h').textContent=criticosFin.length?Math.round((criticos4h.length/criticosFin.length)*100)+'%':'—';
-  const mecActivos=mecanicos.filter(m=>m.activo);
-  document.getElementById('kpi-simultaneas').textContent=mecActivos.length?+(act.length/mecActivos.length).toFixed(1):'—';
-
-  // Objetivo más crítico
-  const objRatio=[...new Set(incidencias.map(i=>i.objetivo))].map(o=>{
-    const t=incidencias.filter(i=>i.objetivo===o).length;
-    const c=incidencias.filter(i=>i.objetivo===o&&i.prioridad==='critico').length;
-    return{n:o,ratio:t?Math.round((c/t)*100):0};
-  }).sort((a,b)=>b.ratio-a.ratio);
-  if(objRatio.length){
-    document.getElementById('kpi-obj-critico').textContent=objRatio[0].n;
-    document.getElementById('kpi-obj-critico-sub').textContent=objRatio[0].ratio+'% ratio crítico';
-  }
-
-  // Falla más frecuente
-  const fallaLabels={mecanica:'Mecánica',electrica:'Eléctrica',hidraulica:'Hidráulica',neumatica:'Neumática',otro:'Otro'};
-  const fallaCount=Object.keys(fallaLabels).map(k=>({k,v:incidencias.filter(i=>i.tipo_falla===k).length})).filter(f=>f.v>0).sort((a,b)=>b.v-a.v);
-  if(fallaCount.length){
-    const top=fallaCount[0];
-    const pct=Math.round((top.v/incidencias.length)*100);
-    document.getElementById('kpi-falla-top').textContent=fallaLabels[top.k];
-    document.getElementById('kpi-falla-top-sub').textContent=pct+'% del total';
-  }
-
-  // Críticas activas lista
-  const criticas=act.filter(i=>['critico','alta'].includes(i.prioridad)).sort((a,b)=>(a.prioridad==='critico'?0:1)-(b.prioridad==='critico'?0:1));
-  const estadoLabel={pendiente:'PENDIENTE',diagnostico:'DIAGNÓSTICO',esperando_repuestos:'ESP. REPUESTOS',en_reparacion:'EN REPARACIÓN'};
   const badgePri={critico:'badge-d badge-red',alta:'badge-d badge-amber',media:'badge-d badge-gray',baja:'badge-d badge-green'};
-  document.getElementById('ind-criticas-lista').innerHTML=criticas.length?criticas.map(i=>`
+  const priLabel={critico:'Crítico',alta:'Alta',media:'Media',baja:'Baja'};
+  const dotColor={critico:'var(--red)',alta:'var(--orange)',media:'var(--text3)',baja:'var(--green)'};
+  const alertas=act.filter(i=>['critico','alta'].includes(i.prioridad)).sort((a,b)=>(a.prioridad==='critico'?0:1)-(b.prioridad==='critico'?0:1));
+  document.getElementById('ind-alertas').innerHTML=alertas.length?alertas.map(i=>`
     <div class="inc-row-d">
-      <span class="${badgePri[i.prioridad]}">${i.prioridad.toUpperCase()}</span>
+      <div style="width:8px;height:8px;border-radius:50%;background:${dotColor[i.prioridad]};flex-shrink:0;margin-top:4px"></div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${i.tipo_equipo||i.equipo}${i.numero_unidad?' — '+i.numero_unidad:''}</div>
-        <div style="font-size:11px;color:var(--text2)">${i.objetivo} · ${i.mecanico||'Sin asignar'} · ${tRel(i.created_at)}</div>
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${i.tipo_equipo||i.equipo}${i.numero_unidad?' '+i.numero_unidad:''} — ${i.objetivo}</div>
+        <div style="font-size:11px;color:var(--text3)">${i.tipo_falla||''} · ${i.capataz||''} · ${tRel(i.created_at)} · <span class="${badgePri[i.prioridad]}">${priLabel[i.prioridad]}</span></div>
       </div>
-      <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace">${estadoLabel[i.estado]||i.estado.toUpperCase()}</span>
     </div>`).join(''):'<div style="color:var(--text3);font-size:12px;padding:8px 0">Sin incidencias críticas activas</div>';
 
-  // Estados lista
-  const ESTADOS_LIST=[{k:'pendiente',l:'Pendiente',c:'var(--red)'},{k:'diagnostico',l:'Diagnóstico',c:'var(--orange)'},{k:'esperando_repuestos',l:'Esp. repuestos',c:'var(--blue)'},{k:'en_reparacion',l:'En reparación',c:'var(--yellow)'},{k:'finalizado',l:'Finalizado',c:'var(--green)'}];
-  document.getElementById('ind-estados-lista').innerHTML=ESTADOS_LIST.map(s=>`
-    <div class="pri-row-d">
-      <span><span style="width:8px;height:8px;border-radius:50%;background:${s.c};display:inline-block;margin-right:6px"></span><span style="font-size:12px;color:var(--text2)">${s.l}</span></span>
-      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text)">${incidencias.filter(i=>i.estado===s.k).length}</span>
-    </div>`).join('');
-
-  // Carga por mecánico
+  const mecActivos=mecanicos.filter(m=>m.activo);
+  const ini2=n=>n?n.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase():'?';
   document.getElementById('ind-carga-mec-d').innerHTML=mecActivos.map(m=>{
     const carga=act.filter(i=>i.mecanico===m.nombre).length;
-    const cls=carga>=3?'badge-red':carga>=1?'badge-amber':'badge-green';
+    const cls=carga>=3?'badge-d badge-red':carga>=1?'badge-d badge-amber':'badge-d badge-green';
     const lbl=carga===0?'0 activas':carga===1?'1 activa':carga+' activas';
     return`<div class="mec-row-d">
       <div class="av-d">${ini2(m.nombre)}</div>
       <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${m.nombre}</div><div style="font-size:11px;color:var(--text3)">${(m.habilidades||[]).slice(0,3).join(' · ')}</div></div>
-      <span class="badge-d ${cls}">${lbl}</span>
+      <span class="${cls}">${lbl}</span>
     </div>`;
   }).join('')||'<div style="color:var(--text3);font-size:12px">Sin mecánicos</div>';
 
-  // Tiempo por prioridad
-  const pris=[{k:'critico',l:'Crítico',c:'var(--red)'},{k:'alta',l:'Alta',c:'var(--orange)'},{k:'media',l:'Media',c:'var(--text3)'},{k:'baja',l:'Baja',c:'var(--green)'}];
-  const maxT=Math.max(1,...pris.map(p=>{const t=fin.filter(i=>i.prioridad===p.k&&i.fecha_finalizado).map(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000);return t.length?Math.round(t.reduce((a,b)=>a+b,0)/t.length):0;}));
-  document.getElementById('ind-tiempo-pri-d').innerHTML=pris.map(p=>{
-    const t=fin.filter(i=>i.prioridad===p.k&&i.fecha_finalizado).map(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000);
-    const avg=t.length?Math.round(t.reduce((a,b)=>a+b,0)/t.length):null;
-    return`<div class="bar-row"><div class="bar-row-name" style="color:${p.c}">${p.l}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${avg?Math.round((avg/maxT)*100):0}%;background:${p.c}"></div></div><div class="bar-row-val">${avg!==null?avg+'h':'—'}</div></div>`;
-  }).join('');
+  const fallasHist=[
+    {n:'Service / mant.',v:96,c:'var(--blue)'},
+    {n:'Piola / soga',v:55,c:'var(--blue)'},
+    {n:'Sin fuerza',v:48,c:'var(--blue)'},
+    {n:'No arranca',v:36,c:'var(--blue)'},
+    {n:'Motor roto',v:25,c:'var(--red)'},
+    {n:'Batería',v:22,c:'var(--orange)'},
+    {n:'Eléctrico',v:22,c:'var(--orange)'},
+  ];
+  const maxF=96;
+  document.getElementById('ind-fallas-freq').innerHTML=fallasHist.map(f=>`
+    <div class="bar-row"><div class="bar-row-name">${f.n}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round((f.v/maxF)*100)}%;background:${f.c}"></div></div><div class="bar-row-val">${f.v}</div></div>`).join('');
 
-  // Tipo de falla
-  const maxF=Math.max(1,...Object.keys(fallaLabels).map(k=>incidencias.filter(i=>i.tipo_falla===k).length));
-  document.getElementById('ind-falla-d').innerHTML='<div class="ind-title" style="margin-bottom:10px">Distribución tipo de falla</div>'+
-    Object.keys(fallaLabels).map(k=>{
-      const v=incidencias.filter(i=>i.tipo_falla===k).length;
-      const pct=incidencias.length?Math.round((v/incidencias.length)*100):0;
-      return`<div class="bar-row"><div class="bar-row-name">${fallaLabels[k]}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round((v/maxF)*100)}%;background:var(--blue)"></div></div><div class="bar-row-val">${pct}%</div></div>`;
-    }).join('');
-
-  // Frecuencia por objetivo
-  const objFrec=[...new Set(incidencias.map(i=>i.objetivo))].map(o=>({n:o,v:incidencias.filter(i=>i.objetivo===o).length})).sort((a,b)=>b.v-a.v);
+  const objFrec=[...new Set(incidencias.map(i=>i.objetivo))].filter(Boolean).map(o=>({n:o,v:incidencias.filter(i=>i.objetivo===o).length})).sort((a,b)=>b.v-a.v).slice(0,6);
   const maxO=Math.max(1,...objFrec.map(o=>o.v));
-  document.getElementById('ind-obj-freq-d').innerHTML=objFrec.map(o=>`
-    <div class="bar-row"><div class="bar-row-name">${o.n}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round((o.v/maxO)*100)}%;background:var(--blue)"></div></div><div class="bar-row-val">${o.v}</div></div>`).join('')||na();
+  document.getElementById('ind-obj-freq').innerHTML=objFrec.map(o=>`
+    <div class="bar-row"><div class="bar-row-name">${o.n}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round((o.v/maxO)*100)}%;background:${o.v===maxO?'var(--red)':o.v>maxO*0.5?'var(--orange)':'var(--green)'}"></div></div><div class="bar-row-val">${o.v}</div></div>`).join('')||na();
 
-  // Rendimiento
-  const rend=mecActivos.map(m=>{
-    const t=incidencias.filter(i=>i.mecanico===m.nombre).length;
-    const f=incidencias.filter(i=>i.mecanico===m.nombre&&i.estado==='finalizado').length;
-    return{n:m.nombre,t,f,tasa:t?Math.round((f/t)*100):0};
-  }).sort((a,b)=>b.tasa-a.tasa);
-  document.getElementById('ind-rend-d').innerHTML='<div class="ind-title" style="margin-bottom:10px">Rendimiento por mecánico</div>'+
-    rend.map(m=>`<div class="bar-row"><div class="bar-row-name">${m.n.split(' ')[0]}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${m.tasa}%;background:${m.tasa>70?'var(--green)':m.tasa>40?'var(--yellow)':'var(--orange)'}"></div></div><div class="bar-row-val">${m.tasa}%</div></div>`).join('')||na();
+  document.getElementById('ind-tiempo-equipo').innerHTML=`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--text2)">Motoguadaña / Motosierra</span>
+        <span style="font-size:13px;font-weight:500;color:var(--green)">4-8h</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">Objetivo: resolución en el día</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--text2)">Mini tractor / Giro cero</span>
+        <span style="font-size:13px;font-weight:500;color:var(--orange)">1-2 días</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">Depende de disponibilidad de piezas</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:10px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--text2)">Tractor</span>
+        <span style="font-size:13px;font-weight:500;color:var(--red)">2-5 días</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">Variable — críticos máx 48h</div>
+    </div>
+    <div style="border-top:1px solid var(--border);padding-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:12px;color:var(--text2)">Unidades (Toyota / Camión)</span>
+        <span style="font-size:13px;font-weight:500;color:var(--yellow)">1-3 días</span>
+      </div>
+      <div style="font-size:11px;color:var(--text3)">Service programable con anticipación</div>
+    </div>`;
+
+  const totalInc=incidencias.length||1;
+  const serviceCount=incidencias.filter(i=>i.tipo_falla&&i.tipo_falla.toLowerCase().includes('service')).length;
+  const servicePct=Math.round((serviceCount/totalInc)*100);
+  const fallaPct=100-servicePct;
+  document.getElementById('ind-service-vs-falla').innerHTML=`
+    <div style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;color:var(--text2)">Service / mantenimiento evitable</span>
+        <span style="font-size:13px;font-weight:500;color:var(--red)">${servicePct}%</span>
+      </div>
+      <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden">
+        <div style="width:${servicePct}%;height:100%;background:var(--red);border-radius:5px"></div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+        <span style="font-size:12px;color:var(--text2)">Falla mecánica real</span>
+        <span style="font-size:13px;font-weight:500;color:var(--green)">${fallaPct}%</span>
+      </div>
+      <div style="height:10px;background:var(--bg3);border-radius:5px;overflow:hidden">
+        <div style="width:${fallaPct}%;height:100%;background:var(--green);border-radius:5px"></div>
+      </div>
+    </div>
+    <div style="background:var(--bg3);border-radius:6px;padding:10px;font-size:11px;color:var(--text3)">
+      Reducir el service evitable libera capacidad del taller para atender fallas reales con mayor rapidez.
+    </div>`;
+
+  document.getElementById('ind-semana-comp').innerHTML=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="text-align:center;padding:14px;background:var(--bg3);border-radius:8px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Esta semana</div>
+        <div style="font-size:28px;font-weight:500;color:${diff>0?'var(--red)':'var(--green)'}">${estaSemana}</div>
+      </div>
+      <div style="text-align:center;padding:14px;background:var(--bg3);border-radius:8px">
+        <div style="font-size:11px;color:var(--text3);margin-bottom:6px">Semana anterior</div>
+        <div style="font-size:28px;font-weight:500;color:var(--text)">${antSemana}</div>
+      </div>
+    </div>
+    <div style="background:${diff>0?'var(--red-dim)':'var(--green-dim)'};border-radius:6px;padding:10px;display:flex;align-items:center;gap:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${diff>0?'var(--red)':'var(--green)'};flex-shrink:0"></div>
+      <span style="font-size:11px;color:${diff>0?'var(--red)':'var(--green)'}">${diff>0?'Aumento de +'+diff+' incidencias — monitorear tendencia':'Reducción de '+Math.abs(diff)+' incidencias respecto a la semana anterior'}</span>
+    </div>`;
 }
 
 async function cambiarEstado(id,est){
