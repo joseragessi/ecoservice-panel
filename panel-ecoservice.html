@@ -177,6 +177,18 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 </head>
 <body>
 
+<div id="login-overlay" style="position:fixed;inset:0;background:#0d1117;display:flex;align-items:center;justify-content:center;z-index:9999;">
+  <div class="login-box">
+    <div class="login-logo">ECOSERVICE SRL</div>
+    <div class="login-title">Panel de Taller</div>
+    <div class="login-sub">Ingresá tus credenciales para continuar</div>
+    <input class="login-input" type="text" id="login-user" placeholder="Usuario" autocomplete="off">
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña">
+    <button class="login-btn" onclick="intentarLogin()">Ingresar</button>
+    <div class="login-error" id="login-error" style="display:none">Usuario o contraseña incorrectos</div>
+  </div>
+</div>
+
 <header>
   <div class="logo">EcoService <span>/</span> Taller</div>
   <div class="header-stats">
@@ -425,7 +437,7 @@ tbody td{padding:10px 14px;vertical-align:middle;}
 
 <script>
 const SUPABASE_URL='https://rifkxfkjtavcqluxiqdx.supabase.co';
-const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJpZmt4ZmtqdGF2Y3FsdXhpcWR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ2MzI4MDcsImV4cCI6MjA5MDIwODgwN30.SmSL6gXedmXRKJXTlytSg5Syi8kX4fRDHgRvq2PD0P4';
+const SUPABASE_KEY='TU_PUBLISHABLE_KEY_AQUI';
 const ESTADOS=['pendiente','diagnostico','esperando_repuestos','en_reparacion','finalizado'];
 const ESTADOS_LABEL={pendiente:'Pendiente',diagnostico:'Diagnóstico',esperando_repuestos:'Esp. repuestos',en_reparacion:'En reparación',finalizado:'Finalizado'};
 const HAB_COLOR={motor_2t:'#4aa8ff',motor_4t:'#6fcf3a',hidraulica:'#f59e2a',electrico:'#e8d44d',soldadura:'#ff6b6b',neumatico:'#c084fc',giro_cero:'#2dd4bf',unidades:'#fb923c',tractores:'#a78bfa',cortadora:'#34d399',general:'#8a9085'};
@@ -791,6 +803,23 @@ cargarDatos();
 cargarObjetivos();
 cargarCapataces();
 setInterval(cargarDatos,5000);
+
+function intentarLogin(){
+  const u=document.getElementById('login-user').value.trim();
+  const p=document.getElementById('login-pass').value.trim();
+  if(u==='Logistica' && p==='Ecoservice2025+'){
+    document.getElementById('login-overlay').style.display='none';
+    cargarDatos();
+  } else {
+    document.getElementById('login-error').style.display='block';
+  }
+}
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'){
+    const ov=document.getElementById('login-overlay');
+    if(ov && ov.style.display!=='none') intentarLogin();
+  }
+});
 
 // ── OBJETIVOS ─────────────────────────────────────────────────
 let objetivos = [];
