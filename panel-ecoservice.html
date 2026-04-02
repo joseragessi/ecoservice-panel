@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EcoService · Taller</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0f0e;--bg2:#161814;--bg3:#1e201c;--bg4:#242620;--border:#2a2e27;--border2:#363b32;--text:#d4d8cf;--text2:#8a9085;--text3:#555c50;--green:#6fcf3a;--green-dim:#3a5c22;--red:#ff4f4f;--red-dim:#5c1f1f;--orange:#f59e2a;--orange-dim:#5c3d10;--yellow:#e8d44d;--yellow-dim:#4a431a;--blue:#4aa8ff;--blue-dim:#1a3a5c;--accent:#6fcf3a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+header{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:100;}
+.logo{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:500;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;}
+.logo span{color:var(--text3);}
+.header-stats{display:flex;gap:20px;align-items:center;}
+.stat-pill{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.stat-dot{width:6px;height:6px;border-radius:50%;}
+.nav-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 24px;}
+.nav-tab{padding:10px 18px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
+.nav-tab:hover{color:var(--text2);}
+.nav-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.page{display:none;height:calc(100vh - 93px);}
+.page.active{display:flex;}
+
+/* INCIDENCIAS */
+.layout{display:grid;grid-template-columns:210px 1fr 310px;width:100%;height:100%;}
+aside{border-right:1px solid var(--border);background:var(--bg2);padding:14px 0;overflow-y:auto;}
+.aside-section{padding:0 14px 14px;border-bottom:1px solid var(--border);margin-bottom:14px;}
+.aside-label{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.filter-btn{display:flex;align-items:center;justify-content:space-between;width:100%;padding:6px 8px;border-radius:4px;border:none;background:transparent;color:var(--text2);font-family:'IBM Plex Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;margin-bottom:2px;text-align:left;}
+.filter-btn:hover{background:var(--bg3);color:var(--text);}
+.filter-btn.active{background:var(--bg3);color:var(--text);}
+.filter-btn .count{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);}
+.filter-btn.active .count{color:var(--accent);}
+.pdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:6px;}
+main{overflow-y:auto;background:var(--bg);}
+.toolbar{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--bg);position:sticky;top:0;z-index:10;}
+.search-input{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:7px 12px;color:var(--text);font-family:'IBM Plex Mono',monospace;font-size:12px;outline:none;}
+.search-input::placeholder{color:var(--text3);}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:9px 14px;text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2);white-space:nowrap;}
+tbody tr{border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;}
+tbody tr:hover{background:var(--bg2);}
+tbody tr.selected{background:var(--bg3);}tbody tr.finalizada{background:#1a2e1a;opacity:.7;}tbody tr.finalizada:hover{background:#1f361f;}
+tbody td{padding:10px 14px;vertical-align:middle;}
+.empty-row td{text-align:center;padding:40px;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.badge{display:inline-flex;align-items:center;padding:3px 7px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.badge.critico{background:var(--red-dim);color:var(--red);border:1px solid #8b2020;}
+.badge.alta{background:var(--orange-dim);color:var(--orange);border:1px solid #8b5a10;}
+.badge.media{background:#2a2e27;color:#8a9085;border:1px solid #555c50;}
+.badge.baja{background:var(--green-dim);color:var(--green);border:1px solid #3a6020;}
+.estado-badge{display:inline-block;padding:3px 7px;border-radius:3px;font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);}
+.mec-chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;}
+.mec-avatar{width:22px;height:22px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--accent);flex-shrink:0;}
+.equipo-cell{font-family:'IBM Plex Mono',monospace;font-size:11px;}
+.tipo-tag{color:var(--text3);font-size:10px;}
+.tiempo-cell{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);}
+
+/* DETAIL */
+.detail{border-left:1px solid var(--border);background:var(--bg2);overflow-y:auto;display:flex;flex-direction:column;}
+.detail-header{padding:16px 18px;border-bottom:1px solid var(--border);}
+.detail-id{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:5px;}
+.detail-equipo{font-size:15px;font-weight:600;margin-bottom:3px;}
+.detail-objetivo{font-size:12px;color:var(--text2);}
+.detail-body{padding:16px 18px;flex:1;}
+.detail-section{margin-bottom:18px;}
+.dsec-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:7px;}
+.detail-desc{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 12px;font-size:12px;line-height:1.6;}
+.estado-flow{display:flex;flex-direction:column;gap:3px;}
+.estado-step{display:flex;align-items:center;gap:10px;padding:7px 9px;border-radius:4px;border:1px solid transparent;cursor:pointer;transition:all .15s;font-size:12px;}
+.estado-step:hover{border-color:var(--border2);background:var(--bg3);}
+.estado-step.current{border-color:var(--accent);background:var(--green-dim);color:var(--green);}
+.estado-step.done{color:var(--text3);}
+.step-num{font-family:'IBM Plex Mono',monospace;font-size:10px;width:18px;height:18px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.estado-step.current .step-num{border-color:var(--accent);color:var(--accent);}
+.mec-card-d{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:12px;}
+.mec-name-d{font-weight:500;font-size:13px;margin-bottom:6px;}
+.habs{display:flex;flex-wrap:wrap;gap:4px;}
+.hab-tag{padding:2px 6px;border-radius:2px;background:var(--bg);border:1px solid var(--border);font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;}
+.select-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:7px 10px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:12px;outline:none;cursor:pointer;margin-top:8px;}
+.detail-footer{padding:14px 18px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.empty-detail{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:var(--text3);}
+
+/* BTN */
+.btn{padding:7px 14px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:'IBM Plex Sans',sans-serif;font-size:12px;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.btn:hover{border-color:var(--border2);color:var(--text);}
+.btn.primary{background:var(--green-dim);border-color:var(--green);color:var(--green);}
+.btn.primary:hover{background:var(--green);color:#0e0f0e;}
+.btn.danger{background:var(--red-dim);border-color:var(--red);color:var(--red);}
+.btn.sm{padding:4px 10px;font-size:11px;}
+
+/* MECANICOS PAGE */
+.page-content{width:100%;padding:24px;overflow-y:auto;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.page-title{font-size:16px;font-weight:600;}
+.mec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+.mec-card-full{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;transition:border-color .15s;}
+.mec-card-full:hover{border-color:var(--border2);}
+.mec-card-full.inactive{opacity:.45;}
+.mec-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.mec-card-info{display:flex;align-items:center;gap:10px;}
+.mec-avatar-lg{width:36px;height:36px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--accent);}
+.mec-card-name{font-weight:500;font-size:13px;}
+.mec-card-stats{font-size:11px;color:var(--text3);margin-top:1px;font-family:'IBM Plex Mono',monospace;}
+.mec-card-actions{display:flex;gap:6px;}
+.carga-row{display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.carga-label{font-size:11px;color:var(--text3);width:80px;}
+.carga-bar{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden;}
+.carga-fill{height:100%;border-radius:2px;transition:width .3s;}
+.carga-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);width:20px;text-align:right;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:center;justify-content:center;}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;width:460px;max-width:90vw;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border);}
+.modal-title{font-weight:600;font-size:14px;}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:10px;color:var(--text2);margin-bottom:6px;font-family:'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;}
+.form-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;}
+.form-input:focus{border-color:var(--border2);}
+.habs-check{display:flex;flex-wrap:wrap;gap:8px;}
+.hab-check{display:flex;align-items:center;gap:5px;cursor:pointer;}
+.hab-check input{accent-color:var(--accent);}
+.hab-check span{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);text-transform:uppercase;}
+
+/* INDICADORES */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;}
+.kpi-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;}
+.kpi-val{font-family:'IBM Plex Mono',monospace;font-size:28px;font-weight:500;line-height:1;}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px;}
+.ind-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}.kpi-grid{grid-template-columns:repeat(4,1fr);}
+.kpi2-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px;}
+.ind-grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:12px;}
+.ind-card2{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;}
+.inc-row-d{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.inc-row-d:last-child{border-bottom:none;}
+.mec-row-d{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);}
+.mec-row-d:last-child{border-bottom:none;}
+.pri-row-d{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);}
+.pri-row-d:last-child{border-bottom:none;}
+.av-d{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;background:var(--bg3);border:1px solid var(--border2);color:var(--accent);}
+.badge-d{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:500;font-family:'IBM Plex Mono',monospace;}
+.badge-red{background:var(--red-dim);color:var(--red);}
+.badge-amber{background:var(--orange-dim);color:var(--orange);}
+.badge-green{background:var(--green-dim);color:var(--green);}
+.badge-gray{background:var(--bg3);color:var(--text2);}
+.sec-div{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.ind-card{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px;}
+.ind-title{font-size:10px;font-weight:500;color:var(--text3);margin-bottom:14px;font-family:'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.bar-row-name{font-size:12px;width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text2);}
+.bar-row-bar{flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+.bar-row-fill{height:100%;border-radius:3px;transition:width .4s;}
+.bar-row-val{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--text2);width:32px;text-align:right;}
+.pri-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+.pri-row:last-child{border-bottom:none;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg3);border:1px solid var(--accent);color:var(--green);padding:10px 16px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;z-index:999;opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+
+.login-overlay{position:fixed;inset:0;background:#0d1117;display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{background:#1a1f2e;border:1px solid #2d3748;border-radius:12px;padding:40px;width:340px;text-align:center;}
+.login-logo{color:#4a8f35;font-size:13px;font-weight:600;letter-spacing:.1em;margin-bottom:6px;}
+.login-title{color:#e2e8f0;font-size:20px;font-weight:600;margin-bottom:4px;}
+.login-sub{color:#718096;font-size:12px;margin-bottom:28px;}
+.login-input{width:100%;background:#0d1117;border:1px solid #2d3748;border-radius:6px;padding:10px 14px;color:#e2e8f0;font-size:13px;margin-bottom:12px;box-sizing:border-box;outline:none;}
+.login-input:focus{border-color:#4a8f35;}
+.login-btn{width:100%;background:#4a8f35;border:none;border-radius:6px;padding:11px;color:white;font-size:13px;font-weight:600;cursor:pointer;margin-top:4px;}
+.login-btn:hover{background:#3d7a2c;}
+.login-error{color:#fc8181;font-size:12px;margin-top:10px;display:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">EcoService <span>/</span> Taller</div>
+  <div class="header-stats">
+    <div class="stat-pill"><div class="stat-dot" style="background:var(--red)"></div><span id="cnt-critico">0</span> crítico</div>
+    <div class="stat-pill"><div class="stat-dot" style="background:var(--orange)"></div><span id="cnt-alta">0</span> alta</div>
+    <div class="stat-pill"><div class="stat-dot" style="background:var(--yellow)"></div><span id="cnt-media">0</span> media</div>
+    <div class="stat-pill"><div class="stat-dot" style="background:var(--green)"></div><span id="cnt-baja">0</span> baja</div>
+  </div>
+</header>
+
+<div class="nav-tabs">
+  <div class="nav-tab active" onclick="switchTab('incidencias',this)">Incidencias</div>
+  <div class="nav-tab" onclick="switchTab('mecanicos',this)">Mecánicos</div>
+  <div class="nav-tab" onclick="switchTab('indicadores',this)">Indicadores</div>
+  <div class="nav-tab" onclick="switchTab('objetivos',this)">Objetivos</div>
+  <div class="nav-tab" onclick="switchTab('capataces',this)">Capataces</div>
+</div>
+
+<!-- TAB INCIDENCIAS -->
+<div class="page active" id="tab-incidencias">
+  <div class="layout">
+    <aside>
+      <div class="aside-section">
+        <div class="aside-label">Estado</div>
+        <button class="filter-btn active" onclick="setFiltro('estado','todos')" id="f-todos">Todos <span class="count" id="fc-todos">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('estado','pendiente')" id="f-pendiente">Pendiente <span class="count" id="fc-pendiente">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('estado','diagnostico')" id="f-diagnostico">Diagnóstico <span class="count" id="fc-diagnostico">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('estado','esperando_repuestos')" id="f-esperando_repuestos">Esp. repuestos <span class="count" id="fc-esperando_repuestos">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('estado','en_reparacion')" id="f-en_reparacion">En reparación <span class="count" id="fc-en_reparacion">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('estado','finalizado')" id="f-finalizado">Finalizado <span class="count" id="fc-finalizado">0</span></button>
+      </div>
+      <div class="aside-section">
+        <div class="aside-label">Prioridad</div>
+        <button class="filter-btn" onclick="setFiltro('prioridad','critico')" id="f-critico"><span><span class="pdot" style="background:var(--red)"></span>Crítico</span><span class="count" id="fc-critico">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('prioridad','alta')" id="f-alta"><span><span class="pdot" style="background:var(--orange)"></span>Alta</span><span class="count" id="fc-alta">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('prioridad','media')" id="f-media"><span><span class="pdot" style="background:var(--yellow)"></span>Media</span><span class="count" id="fc-media">0</span></button>
+        <button class="filter-btn" onclick="setFiltro('prioridad','baja')" id="f-baja"><span><span class="pdot" style="background:var(--green)"></span>Baja</span><span class="count" id="fc-baja">0</span></button>
+      </div>
+      <div class="aside-section" style="border-bottom:none">
+        <div class="aside-label">Mecánico</div>
+        <div id="mecanico-filters"></div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="toolbar">
+        <input class="search-input" placeholder="Buscar equipo, capataz, objetivo..." oninput="buscar(this.value)">
+        <button class="btn" onclick="cargarDatos()">↺ Actualizar</button>
+      </div>
+      <table>
+        <thead><tr><th>Prioridad</th><th>Unidad</th><th>Equipo</th><th>Objetivo</th><th>Capataz</th><th>Mecánico</th><th>Estado</th><th>Hace</th></tr></thead>
+        <tbody id="tbody"><tr><td colspan="7" style="text-align:center;padding:40px;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px;">Cargando...</td></tr></tbody>
+      </table>
+    </main>
+
+    <div class="detail" id="detail">
+      <div class="empty-detail">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:28px;opacity:.2">//</div>
+        <div style="font-size:12px;color:var(--text3)">Seleccioná una incidencia</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TAB MECÁNICOS -->
+<div class="page" id="tab-mecanicos">
+  <div class="page-content">
+    <div class="page-header">
+      <div class="page-title">Mecánicos</div>
+      <button class="btn primary" onclick="abrirModal()">+ Nuevo mecánico</button>
+    </div>
+    <div class="mec-grid" id="mec-grid"><div style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px;">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- TAB INDICADORES -->
+<div class="page" id="tab-indicadores">
+  <div class="page-content">
+    <div class="page-header">
+      <div class="page-title">Tablero de control</div>
+      <button class="btn" onclick="cargarDatos()">↺ Actualizar</button>
+    </div>
+
+    <div class="kpi2-row">
+      <div class="kpi-card"><div class="kpi-label">Incidencias activas</div><div class="kpi-val" id="kpi-activas" style="color:var(--red)">0</div><div class="kpi-sub">en curso ahora</div></div>
+      <div class="kpi-card"><div class="kpi-label">Críticas sin resolver</div><div class="kpi-val" id="kpi-criticas" style="color:var(--red)">0</div><div class="kpi-sub">atención inmediata</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tiempo promedio cierre</div><div class="kpi-val" id="kpi-tiempo" style="color:var(--orange)">—</div><div class="kpi-sub">todas las prioridades</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tasa de resolución</div><div class="kpi-val" id="kpi-tasa" style="color:var(--green)">0%</div><div class="kpi-sub">finalizadas / total</div></div>
+    </div>
+
+    <div class="kpi2-row">
+      <div class="kpi-card"><div class="kpi-label">Críticos resueltos &lt;4h</div><div class="kpi-val" id="kpi-criticos-4h" style="color:var(--green)">—</div><div class="kpi-sub">objetivo: 80%</div></div>
+      <div class="kpi-card"><div class="kpi-label">Promedio simultáneas</div><div class="kpi-val" id="kpi-simultaneas">—</div><div class="kpi-sub">por mecánico activo</div></div>
+      <div class="kpi-card"><div class="kpi-label">Objetivo más crítico</div><div class="kpi-val" id="kpi-obj-critico" style="font-size:14px;padding-top:4px">—</div><div class="kpi-sub" id="kpi-obj-critico-sub">—</div></div>
+      <div class="kpi-card"><div class="kpi-label">Falla más frecuente</div><div class="kpi-val" id="kpi-falla-top" style="font-size:14px;padding-top:4px">—</div><div class="kpi-sub" id="kpi-falla-top-sub">del total</div></div>
+    </div>
+
+    <div class="ind-grid3">
+      <div class="ind-card2" style="grid-column:span 2">
+        <div class="ind-title">Incidencias críticas y altas activas</div>
+        <div id="ind-criticas-lista"></div>
+      </div>
+      <div class="ind-card2">
+        <div class="ind-title">Estado general</div>
+        <div id="ind-estados-lista"></div>
+      </div>
+    </div>
+
+    <div class="ind-grid3">
+      <div class="ind-card2">
+        <div class="ind-title">Carga por mecánico</div>
+        <div id="ind-carga-mec-d"></div>
+      </div>
+      <div class="ind-card2">
+        <div class="ind-title">Tiempo por prioridad · Tipo de falla</div>
+        <div id="ind-tiempo-pri-d"></div>
+        <div class="sec-div" id="ind-falla-d"></div>
+      </div>
+      <div class="ind-card2">
+        <div class="ind-title">Frecuencia por objetivo · Rendimiento</div>
+        <div id="ind-obj-freq-d"></div>
+        <div class="sec-div" id="ind-rend-d"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TAB OBJETIVOS -->
+<div class="page" id="tab-objetivos">
+  <div class="page-content">
+    <div class="page-header">
+      <div class="page-title">Objetivos</div>
+      <button class="btn primary" onclick="abrirModalObj()">+ Nuevo objetivo</button>
+    </div>
+    <div id="obj-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;"></div>
+  </div>
+</div>
+
+<!-- TAB CAPATACES -->
+<div class="page" id="tab-capataces">
+  <div class="page-content">
+    <div class="page-header">
+      <div class="page-title">Capataces</div>
+      <button class="btn primary" onclick="abrirModalCap()">+ Nuevo capataz</button>
+    </div>
+    <div id="cap-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;"></div>
+  </div>
+</div>
+
+<!-- MODAL OBJETIVO -->
+
+<!-- MODAL MECÁNICO -->
+<div class="modal-overlay" id="modal" style="display:none" onclick="if(event.target===this)cerrarModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-title">Nuevo mecánico</div>
+      <button class="modal-close" onclick="cerrarModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input class="form-input" id="inp-nombre" placeholder="Ej: Carlos Medina">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Habilidades</label>
+        <div class="habs-check">
+          <label class="hab-check"><input type="checkbox" value="motor_2t"><span>Motor 2T</span></label>
+          <label class="hab-check"><input type="checkbox" value="motor_4t"><span>Motor 4T</span></label>
+          <label class="hab-check"><input type="checkbox" value="hidraulica"><span>Hidráulica</span></label>
+          <label class="hab-check"><input type="checkbox" value="electrico"><span>Eléctrico</span></label>
+          <label class="hab-check"><input type="checkbox" value="soldadura"><span>Soldadura</span></label>
+          <label class="hab-check"><input type="checkbox" value="neumatico"><span>Neumático</span></label>
+          <label class="hab-check"><input type="checkbox" value="giro_cero"><span>Giro cero</span></label>
+          <label class="hab-check"><input type="checkbox" value="unidades"><span>Unidades</span></label>
+          <label class="hab-check"><input type="checkbox" value="tractores"><span>Tractores</span></label>
+          <label class="hab-check"><input type="checkbox" value="cortadora"><span>Cortadora de pasto</span></label>
+          <label class="hab-check"><input type="checkbox" value="general"><span>General</span></label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cerrarModal()">Cancelar</button>
+      <button class="btn primary" onclick="guardarMecanico()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-obj" style="display:none" onclick="if(event.target===this)cerrarModalObj()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-obj-title">Nuevo objetivo</div>
+      <button class="modal-close" onclick="cerrarModalObj()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="obj-edit-id">
+      <div class="form-group">
+        <label class="form-label">Nombre del objetivo</label>
+        <input class="form-input" id="obj-nombre" placeholder="Ej: Parque Las Heras">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Ubicación</label>
+        <input class="form-input" id="obj-ubicacion" placeholder="Ej: Córdoba Norte">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cerrarModalObj()">Cancelar</button>
+      <button class="btn primary" onclick="guardarObjetivo()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CAPATAZ -->
+<div class="modal-overlay" id="modal-cap" style="display:none" onclick="if(event.target===this)cerrarModalCap()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-cap-title">Nuevo capataz</div>
+      <button class="modal-close" onclick="cerrarModalCap()">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="cap-edit-id">
+      <div class="form-group">
+        <label class="form-label">Nombre completo</label>
+        <input class="form-input" id="cap-nombre" placeholder="Ej: Ramón Díaz">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Teléfono WhatsApp</label>
+        <input class="form-input" id="cap-telefono" placeholder="Ej: 5493516123456 (sin + ni espacios)">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Objetivo asignado</label>
+        <select class="select-input" id="cap-objetivo" style="margin-top:0">
+          <option value="">Seleccioná un objetivo...</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cerrarModalCap()">Cancelar</button>
+      <button class="btn primary" onclick="guardarCapataz()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL='https://rifkxfkjtavcqluxiqdx.supabase.co';
+const SUPABASE_KEY='TU_PUBLISHABLE_KEY_AQUI';
+const ESTADOS=['pendiente','diagnostico','esperando_repuestos','en_reparacion','finalizado'];
+const ESTADOS_LABEL={pendiente:'Pendiente',diagnostico:'Diagnóstico',esperando_repuestos:'Esp. repuestos',en_reparacion:'En reparación',finalizado:'Finalizado'};
+const HAB_COLOR={motor_2t:'#4aa8ff',motor_4t:'#6fcf3a',hidraulica:'#f59e2a',electrico:'#e8d44d',soldadura:'#ff6b6b',neumatico:'#c084fc',giro_cero:'#2dd4bf',unidades:'#fb923c',tractores:'#a78bfa',cortadora:'#34d399',general:'#8a9085'};
+
+let incidencias=[],mecanicos=[],filtro={tipo:'estado',valor:'todos'},busqueda='',seleccionada=null;
+
+async function api(path,opts={}){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1${path}`,{
+    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
+    ...opts
+  });
+  if(!r.ok)throw new Error(await r.text());
+  return r.status===204?null:r.json();
+}
+
+async function cargarDatos(){
+  try{
+    const[rows,mecs]=await Promise.all([
+      api('/v_incidencias?order=created_at.desc&limit=500'),
+      api('/mecanicos?select=id,nombre,habilidades,activo&order=nombre')
+    ]);
+    incidencias=rows; mecanicos=mecs;
+    actualizarContadores(); renderMecFiltros(); renderTabla();
+    renderMecanicos(); renderIndicadores();
+    if(seleccionada){const u=incidencias.find(i=>i.id===seleccionada.id);if(u){renderDetalle(u);cargarComentariosPanel(seleccionada.id);}}
+  }catch(e){console.error(e);showToast('Error al conectar con Supabase');}
+}
+
+function switchTab(tab,el){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  el.classList.add('active');
+}
+
+function filtradas(){
+  return incidencias.filter(i=>{
+    if(filtro.tipo==='estado'&&filtro.valor==='todos'&&i.estado==='finalizado')return false;
+    if(filtro.tipo==='estado'&&filtro.valor!=='todos'&&i.estado!==filtro.valor)return false;
+    if(filtro.tipo==='prioridad'&&i.prioridad!==filtro.valor)return false;
+    if(filtro.tipo==='mecanico'&&(i.mecanico||'Sin asignar')!==filtro.valor)return false;
+    if(busqueda){const q=busqueda.toLowerCase();if(!(i.equipo||'').toLowerCase().includes(q)&&!(i.capataz||'').toLowerCase().includes(q)&&!(i.objetivo||'').toLowerCase().includes(q)&&!(i.descripcion||'').toLowerCase().includes(q))return false;}
+    return true;
+  });
+}
+
+function actualizarContadores(){
+  const act=incidencias.filter(i=>i.estado!=='finalizado');
+  ['critico','alta','media','baja'].forEach(p=>{
+    document.getElementById('cnt-'+p).textContent=act.filter(i=>i.prioridad===p).length;
+    const el=document.getElementById('fc-'+p);if(el)el.textContent=incidencias.filter(i=>i.prioridad===p).length;
+  });
+  document.getElementById('fc-todos').textContent=incidencias.length;
+  ESTADOS.forEach(e=>{const el=document.getElementById('fc-'+e);if(el)el.textContent=incidencias.filter(i=>i.estado===e).length;});
+}
+
+function setFiltro(tipo,valor){
+  filtro={tipo,valor};
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  const b=document.getElementById('f-'+valor);if(b)b.classList.add('active');
+  renderTabla();
+}
+function buscar(q){busqueda=q;renderTabla();}
+
+function renderMecFiltros(){
+  const nombres=[...new Set(incidencias.map(i=>i.mecanico||'Sin asignar'))].sort();
+  document.getElementById('mecanico-filters').innerHTML=nombres.map(n=>`
+    <button class="filter-btn" onclick="setFiltro('mecanico','${n.replace(/'/g,"\\'")}')">
+      ${n} <span class="count">${incidencias.filter(i=>(i.mecanico||'Sin asignar')===n).length}</span>
+    </button>`).join('');
+}
+
+function tRel(ts){const d=Date.now()-new Date(ts),m=Math.floor(d/60000);if(m<60)return m+'m';const h=Math.floor(m/60);if(h<24)return h+'h';return Math.floor(h/24)+'d';}
+function ini(n){if(!n)return'?';return n.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();}
+
+function renderTabla(){
+  const rows=filtradas();
+  const tbody=document.getElementById('tbody');
+  if(!rows.length){tbody.innerHTML=`<tr class="empty-row"><td colspan="8">Sin incidencias para este filtro</td></tr>`;return;}
+  const ord={critico:0,alta:1,media:2,baja:3};
+  rows.sort((a,b)=>(ord[a.prioridad]||0)-(ord[b.prioridad]||0)||new Date(a.created_at)-new Date(b.created_at));
+  tbody.innerHTML=rows.map(i=>`
+    <tr onclick="seleccionar('${i.id}')" class="${seleccionada?.id===i.id?'selected':''}">
+      <td><span class="badge ${i.prioridad}">${i.prioridad.toUpperCase()}</span></td>
+      <td style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);font-weight:500">${i.numero_unidad||'—'}</td>
+      <td><div class="equipo-cell">${i.tipo_equipo||i.equipo}</div><div class="tipo-tag">${i.equipo_tipo}</div></td>
+      <td style="color:var(--text2);font-size:12px">${i.objetivo}</td>
+      <td style="color:var(--text2);font-size:12px">${i.capataz}</td>
+      <td>${i.mecanico?`<div class="mec-chip"><div class="mec-avatar">${ini(i.mecanico)}</div>${i.mecanico}</div>`:'<span style="color:var(--text3);font-size:11px">Sin asignar</span>'}</td>
+      <td><span class="estado-badge">${ESTADOS_LABEL[i.estado]||i.estado}</span></td>
+      <td class="tiempo-cell">${tRel(i.created_at)}</td>
+    </tr>`).join('');
+}
+
+function seleccionar(id){seleccionada=incidencias.find(i=>i.id===id);renderTabla();renderDetalle(seleccionada);cargarComentariosPanel(id);}
+
+async function cargarComentariosPanel(incId){
+  const el=document.getElementById('panel-coms-'+incId);
+  if(!el)return;
+  try{
+    const rows=await api('/comentarios_incidencias?incidencia_id=eq.'+incId+'&order=created_at.asc');
+    if(!rows.length){el.innerHTML='<div style="color:var(--text3);font-size:12px">Sin observaciones</div>';return;}
+    el.innerHTML=rows.map(r=>`
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:6px">
+        <div style="font-size:12px;line-height:1.5;margin-bottom:4px">${r.texto}</div>
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text3)">${r.mecanico_nombre} · ${new Date(r.created_at).toLocaleString('es-AR')}</div>
+      </div>`).join('');
+  }catch(e){el.innerHTML='<div style="color:var(--text3);font-size:12px">Sin observaciones</div>';}
+}
+
+function renderDetalle(inc){
+  const eIdx=ESTADOS.indexOf(inc.estado);
+  const mec=mecanicos.find(m=>m.nombre===inc.mecanico);
+  document.getElementById('detail').innerHTML=`
+    <div class="detail-header">
+      <div class="detail-id"># ${inc.id.slice(0,8).toUpperCase()}</div>
+      <div class="detail-equipo">${inc.equipo_codigo ? "[" + inc.equipo_codigo + "] " : ""}${inc.equipo}</div>
+      <div class="detail-objetivo">${inc.objetivo} · ${inc.capataz}</div>
+      ${inc.numero_unidad ? '<div style="font-size:11px;color:var(--accent);font-family:IBM Plex Mono,monospace;margin-top:3px">Unidad: ' + inc.numero_unidad + '</div>' : ''}
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <div class="dsec-label">Prioridad</div>
+        <span class="badge ${inc.prioridad}">${inc.prioridad.toUpperCase()}</span>
+        <span style="color:var(--text3);font-size:11px;margin-left:8px">${inc.equipo_parado?'· Parado total':'· Operativo'}</span>
+      </div>
+      <div class="detail-section">
+        <div class="dsec-label">Descripción</div>
+        <div class="detail-desc">${inc.descripcion}</div>
+      </div>
+      <div class="detail-section">
+        <div class="dsec-label">Estado</div>
+        <div class="estado-flow">
+          ${ESTADOS.map((e,idx)=>`
+            <div class="estado-step ${idx===eIdx?'current':idx<eIdx?'done':''}" onclick="cambiarEstado('${inc.id}','${e}')">
+              <div class="step-num">${idx<eIdx?'✓':idx+1}</div>${ESTADOS_LABEL[e]}
+            </div>`).join('')}
+        </div>
+      </div>
+      <div class="detail-section">
+        <div class="dsec-label">Mecánico asignado</div>
+        ${inc.mecanico?`<div class="mec-card-d"><div class="mec-name-d">${inc.mecanico}</div><div class="habs">${(mec?.habilidades||[]).map(h=>`<span class="hab-tag" style="color:${HAB_COLOR[h]||'var(--text3)'};border-color:${HAB_COLOR[h]||'var(--border)'}">${h}</span>`).join('')}</div></div>`:'<div style="color:var(--text3);font-size:12px;margin-bottom:4px">Sin asignar</div>'}
+        <select class="select-input" onchange="reasignar('${inc.id}',this.value)">
+          <option value="">Reasignar mecánico...</option>
+          ${mecanicos.filter(m=>m.activo).map(m=>`<option value="${m.id}" ${inc.mecanico===m.nombre?'selected':''}>${m.nombre} — ${(m.habilidades||[]).join(', ')}</option>`).join('')}
+        </select>
+      </div>
+      <div class="detail-section">
+        <div class="dsec-label">Observaciones del mecánico</div>
+        <div id="panel-coms-\${inc.id}"><div style="color:var(--text3);font-size:12px">Cargando...</div></div>
+      </div>
+      <div style="color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:10px">${new Date(inc.created_at).toLocaleString('es-AR')}</div>
+      <div class="detail-section">
+        <div class="dsec-label">Observaciones del mecánico</div>
+        <div id="panel-coms-${inc.id}"><div style="color:var(--text3);font-size:12px">Cargando...</div></div>
+      </div>
+    </div>
+    <div class="detail-footer">
+      ${inc.estado!=='finalizado'?`<button class="btn primary" onclick="avanzar('${inc.id}','${inc.estado}')">Avanzar estado →</button>`:'<span style="color:var(--green);font-size:12px">✓ Finalizada</span>'}
+    </div>`;
+}
+
+// MECÁNICOS
+function renderMecanicos(){
+  const act=incidencias.filter(i=>i.estado!=='finalizado');
+  const max=Math.max(1,...mecanicos.map(m=>act.filter(i=>i.mecanico===m.nombre).length));
+  document.getElementById('mec-grid').innerHTML=mecanicos.map(m=>{
+    const carga=act.filter(i=>i.mecanico===m.nombre).length;
+    const total=incidencias.filter(i=>i.mecanico===m.nombre).length;
+    const fin=incidencias.filter(i=>i.mecanico===m.nombre&&i.estado==='finalizado').length;
+    return`<div class="mec-card-full ${m.activo?'':'inactive'}">
+      <div class="mec-card-top">
+        <div class="mec-card-info">
+          <div class="mec-avatar-lg">${ini(m.nombre)}</div>
+          <div><div class="mec-card-name">${m.nombre}</div><div class="mec-card-stats">${total} total · ${fin} finalizadas</div></div>
+        </div>
+        <div class="mec-card-actions">
+          <button class="btn sm" onclick="abrirModal('${m.id}')">Editar</button>
+          <button class="btn sm ${m.activo?'danger':''}" onclick="toggleMec('${m.id}',${m.activo})">${m.activo?'Desactivar':'Activar'}</button>
+        </div>
+      </div>
+      <div class="habs" style="margin-bottom:10px">${(m.habilidades||[]).map(h=>`<span class="hab-tag" style="color:${HAB_COLOR[h]||'var(--text3)'};border-color:${HAB_COLOR[h]||'var(--border)'}">${h}</span>`).join('')}</div>
+      <div class="carga-row">
+        <span class="carga-label">Carga activa</span>
+        <div class="carga-bar"><div class="carga-fill" style="width:${(carga/max)*100}%;background:${carga>3?'var(--red)':carga>1?'var(--orange)':'var(--green)'}"></div></div>
+        <span class="carga-num">${carga}</span>
+      </div>
+    </div>`;
+  }).join('')||'<div style="color:var(--text3);font-size:12px">No hay mecánicos</div>';
+}
+
+function abrirModal(id=null){
+  document.getElementById('edit-id').value='';
+  document.getElementById('inp-nombre').value='';
+  document.querySelectorAll('.habs-check input').forEach(c=>c.checked=false);
+  document.getElementById('modal-title').textContent=id?'Editar mecánico':'Nuevo mecánico';
+  if(id){const m=mecanicos.find(m=>m.id===id);if(m){document.getElementById('edit-id').value=m.id;document.getElementById('inp-nombre').value=m.nombre;document.querySelectorAll('.habs-check input').forEach(c=>c.checked=(m.habilidades||[]).includes(c.value));}}
+  document.getElementById('modal').style.display='flex';
+}
+function cerrarModal(){document.getElementById('modal').style.display='none';}
+
+async function guardarMecanico(){
+  const id=document.getElementById('edit-id').value;
+  const nombre=document.getElementById('inp-nombre').value.trim();
+  const habilidades=[...document.querySelectorAll('.habs-check input:checked')].map(c=>c.value);
+  if(!nombre){showToast('Ingresá un nombre');return;}
+  if(!habilidades.length){showToast('Seleccioná al menos una habilidad');return;}
+  try{
+    if(id)await api(`/mecanicos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({nombre,habilidades})});
+    else await api('/mecanicos',{method:'POST',body:JSON.stringify({nombre,habilidades,activo:true})});
+    showToast(id?'Mecánico actualizado':'Mecánico creado');cerrarModal();await cargarDatos();
+  }catch(e){console.error(e);showToast('Error al guardar');}
+}
+
+async function toggleMec(id,activo){
+  try{await api(`/mecanicos?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({activo:!activo})});showToast(activo?'Desactivado':'Activado');await cargarDatos();}catch(e){console.error(e);}
+}
+
+// INDICADORES
+function renderIndicadores(){
+  const act=incidencias.filter(i=>i.estado!=='finalizado');
+  const fin=incidencias.filter(i=>i.estado==='finalizado');
+  const ini2=(n)=>{if(!n)return'?';return n.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();};
+
+  // KPIs fila 1
+  document.getElementById('kpi-activas').textContent=act.length;
+  document.getElementById('kpi-criticas').textContent=act.filter(i=>i.prioridad==='critico').length;
+  const tiempos=fin.filter(i=>i.fecha_finalizado).map(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000);
+  document.getElementById('kpi-tiempo').textContent=tiempos.length?Math.round(tiempos.reduce((a,b)=>a+b,0)/tiempos.length)+'h':'—';
+  document.getElementById('kpi-tasa').textContent=incidencias.length?Math.round((fin.length/incidencias.length)*100)+'%':'0%';
+
+  // KPIs fila 2
+  const criticosFin=fin.filter(i=>i.prioridad==='critico'&&i.fecha_finalizado);
+  const criticos4h=criticosFin.filter(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000<=4);
+  document.getElementById('kpi-criticos-4h').textContent=criticosFin.length?Math.round((criticos4h.length/criticosFin.length)*100)+'%':'—';
+  const mecActivos=mecanicos.filter(m=>m.activo);
+  document.getElementById('kpi-simultaneas').textContent=mecActivos.length?+(act.length/mecActivos.length).toFixed(1):'—';
+
+  // Objetivo más crítico
+  const objRatio=[...new Set(incidencias.map(i=>i.objetivo))].map(o=>{
+    const t=incidencias.filter(i=>i.objetivo===o).length;
+    const c=incidencias.filter(i=>i.objetivo===o&&i.prioridad==='critico').length;
+    return{n:o,ratio:t?Math.round((c/t)*100):0};
+  }).sort((a,b)=>b.ratio-a.ratio);
+  if(objRatio.length){
+    document.getElementById('kpi-obj-critico').textContent=objRatio[0].n;
+    document.getElementById('kpi-obj-critico-sub').textContent=objRatio[0].ratio+'% ratio crítico';
+  }
+
+  // Falla más frecuente
+  const fallaLabels={mecanica:'Mecánica',electrica:'Eléctrica',hidraulica:'Hidráulica',neumatica:'Neumática',otro:'Otro'};
+  const fallaCount=Object.keys(fallaLabels).map(k=>({k,v:incidencias.filter(i=>i.tipo_falla===k).length})).filter(f=>f.v>0).sort((a,b)=>b.v-a.v);
+  if(fallaCount.length){
+    const top=fallaCount[0];
+    const pct=Math.round((top.v/incidencias.length)*100);
+    document.getElementById('kpi-falla-top').textContent=fallaLabels[top.k];
+    document.getElementById('kpi-falla-top-sub').textContent=pct+'% del total';
+  }
+
+  // Críticas activas lista
+  const criticas=act.filter(i=>['critico','alta'].includes(i.prioridad)).sort((a,b)=>(a.prioridad==='critico'?0:1)-(b.prioridad==='critico'?0:1));
+  const estadoLabel={pendiente:'PENDIENTE',diagnostico:'DIAGNÓSTICO',esperando_repuestos:'ESP. REPUESTOS',en_reparacion:'EN REPARACIÓN'};
+  const badgePri={critico:'badge-d badge-red',alta:'badge-d badge-amber',media:'badge-d badge-gray',baja:'badge-d badge-green'};
+  document.getElementById('ind-criticas-lista').innerHTML=criticas.length?criticas.map(i=>`
+    <div class="inc-row-d">
+      <span class="${badgePri[i.prioridad]}">${i.prioridad.toUpperCase()}</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${i.tipo_equipo||i.equipo}${i.numero_unidad?' — '+i.numero_unidad:''}</div>
+        <div style="font-size:11px;color:var(--text2)">${i.objetivo} · ${i.mecanico||'Sin asignar'} · ${tRel(i.created_at)}</div>
+      </div>
+      <span style="font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace">${estadoLabel[i.estado]||i.estado.toUpperCase()}</span>
+    </div>`).join(''):'<div style="color:var(--text3);font-size:12px;padding:8px 0">Sin incidencias críticas activas</div>';
+
+  // Estados lista
+  const ESTADOS_LIST=[{k:'pendiente',l:'Pendiente',c:'var(--red)'},{k:'diagnostico',l:'Diagnóstico',c:'var(--orange)'},{k:'esperando_repuestos',l:'Esp. repuestos',c:'var(--blue)'},{k:'en_reparacion',l:'En reparación',c:'var(--yellow)'},{k:'finalizado',l:'Finalizado',c:'var(--green)'}];
+  document.getElementById('ind-estados-lista').innerHTML=ESTADOS_LIST.map(s=>`
+    <div class="pri-row-d">
+      <span><span style="width:8px;height:8px;border-radius:50%;background:${s.c};display:inline-block;margin-right:6px"></span><span style="font-size:12px;color:var(--text2)">${s.l}</span></span>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--text)">${incidencias.filter(i=>i.estado===s.k).length}</span>
+    </div>`).join('');
+
+  // Carga por mecánico
+  document.getElementById('ind-carga-mec-d').innerHTML=mecActivos.map(m=>{
+    const carga=act.filter(i=>i.mecanico===m.nombre).length;
+    const cls=carga>=3?'badge-red':carga>=1?'badge-amber':'badge-green';
+    const lbl=carga===0?'0 activas':carga===1?'1 activa':carga+' activas';
+    return`<div class="mec-row-d">
+      <div class="av-d">${ini2(m.nombre)}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${m.nombre}</div><div style="font-size:11px;color:var(--text3)">${(m.habilidades||[]).slice(0,3).join(' · ')}</div></div>
+      <span class="badge-d ${cls}">${lbl}</span>
+    </div>`;
+  }).join('')||'<div style="color:var(--text3);font-size:12px">Sin mecánicos</div>';
+
+  // Tiempo por prioridad
+  const pris=[{k:'critico',l:'Crítico',c:'var(--red)'},{k:'alta',l:'Alta',c:'var(--orange)'},{k:'media',l:'Media',c:'var(--text3)'},{k:'baja',l:'Baja',c:'var(--green)'}];
+  const maxT=Math.max(1,...pris.map(p=>{const t=fin.filter(i=>i.prioridad===p.k&&i.fecha_finalizado).map(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000);return t.length?Math.round(t.reduce((a,b)=>a+b,0)/t.length):0;}));
+  document.getElementById('ind-tiempo-pri-d').innerHTML=pris.map(p=>{
+    const t=fin.filter(i=>i.prioridad===p.k&&i.fecha_finalizado).map(i=>(new Date(i.fecha_finalizado)-new Date(i.created_at))/3600000);
+    const avg=t.length?Math.round(t.reduce((a,b)=>a+b,0)/t.length):null;
+    return`<div class="bar-row"><div class="bar-row-name" style="color:${p.c}">${p.l}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${avg?Math.round((avg/maxT)*100):0}%;background:${p.c}"></div></div><div class="bar-row-val">${avg!==null?avg+'h':'—'}</div></div>`;
+  }).join('');
+
+  // Tipo de falla
+  const maxF=Math.max(1,...Object.keys(fallaLabels).map(k=>incidencias.filter(i=>i.tipo_falla===k).length));
+  document.getElementById('ind-falla-d').innerHTML='<div class="ind-title" style="margin-bottom:10px">Distribución tipo de falla</div>'+
+    Object.keys(fallaLabels).map(k=>{
+      const v=incidencias.filter(i=>i.tipo_falla===k).length;
+      const pct=incidencias.length?Math.round((v/incidencias.length)*100):0;
+      return`<div class="bar-row"><div class="bar-row-name">${fallaLabels[k]}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round((v/maxF)*100)}%;background:var(--blue)"></div></div><div class="bar-row-val">${pct}%</div></div>`;
+    }).join('');
+
+  // Frecuencia por objetivo
+  const objFrec=[...new Set(incidencias.map(i=>i.objetivo))].map(o=>({n:o,v:incidencias.filter(i=>i.objetivo===o).length})).sort((a,b)=>b.v-a.v);
+  const maxO=Math.max(1,...objFrec.map(o=>o.v));
+  document.getElementById('ind-obj-freq-d').innerHTML=objFrec.map(o=>`
+    <div class="bar-row"><div class="bar-row-name">${o.n}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${Math.round((o.v/maxO)*100)}%;background:var(--blue)"></div></div><div class="bar-row-val">${o.v}</div></div>`).join('')||na();
+
+  // Rendimiento
+  const rend=mecActivos.map(m=>{
+    const t=incidencias.filter(i=>i.mecanico===m.nombre).length;
+    const f=incidencias.filter(i=>i.mecanico===m.nombre&&i.estado==='finalizado').length;
+    return{n:m.nombre,t,f,tasa:t?Math.round((f/t)*100):0};
+  }).sort((a,b)=>b.tasa-a.tasa);
+  document.getElementById('ind-rend-d').innerHTML='<div class="ind-title" style="margin-bottom:10px">Rendimiento por mecánico</div>'+
+    rend.map(m=>`<div class="bar-row"><div class="bar-row-name">${m.n.split(' ')[0]}</div><div class="bar-row-bar"><div class="bar-row-fill" style="width:${m.tasa}%;background:${m.tasa>70?'var(--green)':m.tasa>40?'var(--yellow)':'var(--orange)'}"></div></div><div class="bar-row-val">${m.tasa}%</div></div>`).join('')||na();
+}
+
+async function cambiarEstado(id,est){
+  const f={diagnostico:'fecha_diagnostico',esperando_repuestos:'fecha_espera_repuestos',en_reparacion:'fecha_en_reparacion',finalizado:'fecha_finalizado'}[est];
+  const body={estado:est};if(f)body[f]=new Date().toISOString();
+  try{
+    await api(`/incidencias?id=eq.${id}`,{method:'PATCH',body:JSON.stringify(body)});
+    showToast(`→ ${ESTADOS_LABEL[est]}`);
+    if(est==='finalizado'){
+      const inc=incidencias.find(i=>i.id===id);
+      if(inc&&inc.capataz_telefono){
+        try{
+          await fetch('https://ecoservice-production.up.railway.app/notificar-finalizado',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              telefono: inc.capataz_telefono,
+              equipo:   inc.tipo_equipo||inc.equipo,
+              unidad:   inc.numero_unidad,
+              mecanico: inc.mecanico
+            })
+          });
+        }catch(e){console.warn('No se pudo notificar al capataz',e);}
+      }
+    }
+    await cargarDatos();
+  }catch(e){console.error(e);}
+}
+async function avanzar(id,est){const i=ESTADOS.indexOf(est);if(i<ESTADOS.length-1)await cambiarEstado(id,ESTADOS[i+1]);}
+async function reasignar(id,mecId){
+  if(!mecId)return;
+  try{await api(`/incidencias?id=eq.${id}`,{method:'PATCH',body:JSON.stringify({mecanico_id:mecId})});showToast('Mecánico reasignado');await cargarDatos();}catch(e){console.error(e);}
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+cargarDatos();
+cargarObjetivos();
+cargarCapataces();
+setInterval(cargarDatos,5000);
+
+// ── OBJETIVOS ─────────────────────────────────────────────────
+let objetivos = [];
+
+async function cargarObjetivos() {
+  try {
+    const data = await api('/objetivos?select=id,nombre,ubicacion,activo&order=nombre');
+    objetivos = data;
+    renderObjetivos();
+    // Llenar select de capataces
+    const sel = document.getElementById('cap-objetivo');
+    const val = sel.value;
+    sel.innerHTML = '<option value="">Seleccioná un objetivo...</option>' +
+      objetivos.filter(o=>o.activo).map(o=>`<option value="${o.id}">${o.nombre}</option>`).join('');
+    if(val) sel.value = val;
+  } catch(e) { console.error(e); }
+}
+
+function renderObjetivos() {
+  document.getElementById('obj-grid').innerHTML = objetivos.map(o => `
+    <div class="mec-card-full ${o.activo?'':'inactive'}">
+      <div class="mec-card-top">
+        <div class="mec-card-info">
+          <div class="mec-avatar-lg" style="border-radius:6px;font-size:10px">${o.nombre.slice(0,2).toUpperCase()}</div>
+          <div>
+            <div class="mec-card-name">${o.nombre}</div>
+            <div class="mec-card-stats">${o.ubicacion||'Sin ubicación'}</div>
+          </div>
+        </div>
+        <div class="mec-card-actions">
+          <button class="btn sm" onclick="abrirModalObj('${o.id}')">Editar</button>
+          <button class="btn sm ${o.activo?'danger':''}" onclick="toggleObj('${o.id}',${o.activo})">${o.activo?'Desactivar':'Activar'}</button>
+        </div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:12px">No hay objetivos</div>';
+}
+
+function abrirModalObj(id=null) {
+  document.getElementById('obj-edit-id').value = '';
+  document.getElementById('obj-nombre').value = '';
+  document.getElementById('obj-ubicacion').value = '';
+  document.getElementById('modal-obj-title').textContent = id ? 'Editar objetivo' : 'Nuevo objetivo';
+  if(id) {
+    const o = objetivos.find(o=>o.id===id);
+    if(o) {
+      document.getElementById('obj-edit-id').value = o.id;
+      document.getElementById('obj-nombre').value = o.nombre;
+      document.getElementById('obj-ubicacion').value = o.ubicacion||'';
+    }
+  }
+  document.getElementById('modal-obj').style.display = 'flex';
+}
+function cerrarModalObj() { document.getElementById('modal-obj').style.display = 'none'; }
+
+async function guardarObjetivo() {
+  const id     = document.getElementById('obj-edit-id').value;
+  const nombre = document.getElementById('obj-nombre').value.trim();
+  const ubicacion = document.getElementById('obj-ubicacion').value.trim();
+  if(!nombre) { showToast('Ingresá un nombre'); return; }
+  try {
+    if(id) await api(`/objetivos?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({nombre,ubicacion})});
+    else   await api('/objetivos', {method:'POST', body:JSON.stringify({nombre,ubicacion,activo:true})});
+    showToast(id?'Objetivo actualizado':'Objetivo creado');
+    cerrarModalObj();
+    await cargarObjetivos();
+  } catch(e) { console.error(e); showToast('Error al guardar'); }
+}
+
+async function toggleObj(id, activo) {
+  try {
+    await api(`/objetivos?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({activo:!activo})});
+    showToast(activo?'Desactivado':'Activado');
+    await cargarObjetivos();
+  } catch(e) { console.error(e); }
+}
+
+// ── CAPATACES ─────────────────────────────────────────────────
+let capataces = [];
+
+async function cargarCapataces() {
+  try {
+    const data = await api('/capataces?select=id,nombre,telefono,activo,objetivo_id,objetivos(nombre)&order=nombre');
+    capataces = data;
+    renderCapataces();
+  } catch(e) { console.error(e); }
+}
+
+function renderCapataces() {
+  document.getElementById('cap-grid').innerHTML = capataces.map(c => `
+    <div class="mec-card-full ${c.activo?'':'inactive'}">
+      <div class="mec-card-top">
+        <div class="mec-card-info">
+          <div class="mec-avatar-lg">${ini(c.nombre)}</div>
+          <div>
+            <div class="mec-card-name">${c.nombre}</div>
+            <div class="mec-card-stats">${c.objetivos?.nombre||'Sin objetivo'}</div>
+          </div>
+        </div>
+        <div class="mec-card-actions">
+          <button class="btn sm" onclick="abrirModalCap('${c.id}')">Editar</button>
+          <button class="btn sm ${c.activo?'danger':''}" onclick="toggleCap('${c.id}',${c.activo})">${c.activo?'Desactivar':'Activar'}</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent)">+${c.telefono}</span>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:12px">No hay capataces</div>';
+}
+
+function abrirModalCap(id=null) {
+  document.getElementById('cap-edit-id').value = '';
+  document.getElementById('cap-nombre').value = '';
+  document.getElementById('cap-telefono').value = '';
+  document.getElementById('cap-objetivo').value = '';
+  document.getElementById('modal-cap-title').textContent = id ? 'Editar capataz' : 'Nuevo capataz';
+  cargarObjetivos();
+  if(id) {
+    const c = capataces.find(c=>c.id===id);
+    if(c) {
+      document.getElementById('cap-edit-id').value = c.id;
+      document.getElementById('cap-nombre').value = c.nombre;
+      document.getElementById('cap-telefono').value = c.telefono;
+      setTimeout(()=>{ document.getElementById('cap-objetivo').value = c.objetivo_id; }, 300);
+    }
+  }
+  document.getElementById('modal-cap').style.display = 'flex';
+}
+function cerrarModalCap() { document.getElementById('modal-cap').style.display = 'none'; }
+
+async function guardarCapataz() {
+  const id        = document.getElementById('cap-edit-id').value;
+  const nombre    = document.getElementById('cap-nombre').value.trim();
+  const telefono  = document.getElementById('cap-telefono').value.trim().replace(/\D/g,'');
+  const objetivoId = document.getElementById('cap-objetivo').value;
+  if(!nombre)     { showToast('Ingresá un nombre'); return; }
+  if(!telefono)   { showToast('Ingresá el teléfono'); return; }
+  if(!objetivoId) { showToast('Seleccioná un objetivo'); return; }
+  try {
+    if(id) await api(`/capataces?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({nombre,telefono,objetivo_id:objetivoId})});
+    else   await api('/capataces', {method:'POST', body:JSON.stringify({nombre,telefono,objetivo_id:objetivoId,activo:true})});
+    showToast(id?'Capataz actualizado':'Capataz creado');
+    cerrarModalCap();
+    await cargarCapataces();
+  } catch(e) { console.error(e); showToast('Error al guardar'); }
+}
+
+async function toggleCap(id, activo) {
+  try {
+    await api(`/capataces?id=eq.${id}`, {method:'PATCH', body:JSON.stringify({activo:!activo})});
+    showToast(activo?'Desactivado':'Activado');
+    await cargarCapataces();
+  } catch(e) { console.error(e); }
+}
+
+</script>
+</body>
+</html>

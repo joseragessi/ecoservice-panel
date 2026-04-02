@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>EcoService · Taller</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0e0f0e;--bg2:#161814;--bg3:#1e201c;--border:#2a2e27;--border2:#363b32;--text:#d4d8cf;--text2:#8a9085;--text3:#555c50;--green:#6fcf3a;--green-dim:#3a5c22;--red:#ff4f4f;--red-dim:#5c1f1f;--orange:#f59e2a;--orange-dim:#5c3d10;--yellow:#e8d44d;--yellow-dim:#4a431a;--accent:#6fcf3a;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'IBM Plex Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+
+/* LOGIN */
+#login{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+.login-box{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:32px 24px;width:100%;max-width:360px;}
+.login-logo{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:.1em;text-transform:uppercase;text-align:center;margin-bottom:24px;}
+.login-logo span{color:var(--text3);}
+.login-title{font-size:18px;font-weight:600;text-align:center;margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--text2);text-align:center;margin-bottom:24px;}
+.mec-option{display:flex;align-items:center;gap:12px;padding:12px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);cursor:pointer;transition:all .15s;margin-bottom:8px;}
+.mec-option:hover{border-color:var(--accent);background:var(--green-dim);}
+.mec-option-avatar{width:36px;height:36px;border-radius:50%;background:var(--bg2);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);flex-shrink:0;}
+.mec-option-name{font-weight:500;}
+.mec-option-habs{font-size:11px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+
+/* APP */
+#app{display:none;min-height:100vh;flex-direction:column;}
+.app-header{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:52px;border-bottom:1px solid var(--border);background:var(--bg2);position:sticky;top:0;z-index:100;}
+.app-logo{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;}
+.app-user{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text2);}
+.app-avatar{width:28px;height:28px;border-radius:50%;background:var(--bg3);border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--accent);}
+.logout-btn{background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;padding:4px 8px;border-radius:4px;}
+.logout-btn:hover{color:var(--red);}
+
+.app-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg2);padding:0 16px;}
+.app-tab{padding:10px 16px;font-size:12px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-1px;}
+.app-tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.app-content{flex:1;padding:16px;}
+
+/* CARDS DE INCIDENCIAS */
+.inc-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden;transition:border-color .15s;}
+.inc-card:hover{border-color:var(--border2);}
+.inc-card.critico{border-left:3px solid var(--red);}
+.inc-card.alta{border-left:3px solid var(--orange);}
+.inc-card.media{border-left:3px solid #555c50;}
+.inc-card.baja{border-left:3px solid var(--green);}
+
+.inc-card-header{padding:12px 14px;cursor:pointer;}
+.inc-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.inc-equipo{font-weight:600;font-size:14px;}
+.inc-unidad{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);margin-top:2px;}
+.inc-meta{font-size:11px;color:var(--text2);margin-top:4px;}
+.inc-desc{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.5;background:var(--bg3);padding:8px 10px;border-radius:4px;}
+
+.badge{display:inline-flex;padding:3px 7px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;}
+.badge.critico{background:var(--red-dim);color:var(--red);border:1px solid #8b2020;}
+.badge.alta{background:var(--orange-dim);color:var(--orange);border:1px solid #8b5a10;}
+.badge.media{background:#2a2e27;color:#8a9085;border:1px solid #555c50;}
+.badge.baja{background:var(--green-dim);color:var(--green);border:1px solid #3a6020;}
+.estado-badge{display:inline-block;padding:3px 8px;border-radius:3px;font-size:11px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);}
+
+/* DETALLE EXPANDIDO */
+.inc-detail{display:none;padding:0 14px 14px;border-top:1px solid var(--border);}
+.inc-detail.open{display:block;}
+
+.estados-flow{display:flex;flex-direction:column;gap:4px;margin:12px 0;}
+.estado-step{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:all .15s;font-size:13px;}
+.estado-step:hover{border-color:var(--border2);background:var(--bg3);}
+.estado-step.current{border-color:var(--accent);background:var(--green-dim);color:var(--green);}
+.estado-step.done{color:var(--text3);background:var(--bg3);}
+.step-num{font-family:'IBM Plex Mono',monospace;font-size:10px;width:22px;height:22px;border-radius:50%;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.estado-step.current .step-num{border-color:var(--accent);color:var(--accent);}
+
+.avanzar-btn{width:100%;padding:12px;border-radius:6px;border:1px solid var(--green);background:var(--green-dim);color:var(--green);font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;margin-top:8px;}
+.avanzar-btn:hover{background:var(--green);color:#0e0f0e;}
+
+/* COMENTARIOS */
+.comentarios{margin-top:14px;}
+.comentario-item{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;}
+.comentario-texto{font-size:12px;line-height:1.5;margin-bottom:4px;}
+.comentario-meta{font-size:10px;color:var(--text3);font-family:'IBM Plex Mono',monospace;}
+.comentario-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;color:var(--text);font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;resize:none;min-height:80px;margin-top:8px;}
+.comentario-input:focus{border-color:var(--border2);}
+.comentario-input::placeholder{color:var(--text3);}
+.send-btn{width:100%;padding:10px;border-radius:6px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);font-family:'IBM Plex Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .15s;margin-top:6px;}
+.send-btn:hover{border-color:var(--border2);color:var(--text);}
+
+.sec-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text3);margin-bottom:8px;margin-top:12px;}
+
+.empty{text-align:center;padding:48px 24px;color:var(--text3);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--bg3);border:1px solid var(--accent);color:var(--green);padding:10px 20px;border-radius:6px;font-family:'IBM Plex Mono',monospace;font-size:11px;z-index:999;opacity:0;transition:all .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.kpi-mini{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:12px;text-align:center;}
+.kpi-mini-val{font-family:'IBM Plex Mono',monospace;font-size:22px;font-weight:500;line-height:1;}
+.kpi-mini-label{font-size:10px;color:var(--text3);margin-top:4px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.06em;}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo">EcoService <span>/</span> Taller</div>
+    <div class="login-title">Bienvenido</div>
+    <div class="login-sub">Seleccioná tu nombre para continuar</div>
+    <div id="mec-list"><div style="text-align:center;color:var(--text3);font-size:12px;padding:20px">Cargando...</div></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="app-header">
+    <div class="app-logo">EcoService <span style="color:var(--text3)">/</span> Taller</div>
+    <div class="app-user">
+      <div class="app-avatar" id="app-avatar">?</div>
+      <span id="app-nombre">—</span>
+      <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
+    </div>
+  </div>
+
+  <div class="app-tabs">
+    <div class="app-tab active" onclick="switchTab('activas',this)">Mis incidencias</div>
+    <div class="app-tab" onclick="switchTab('historial',this)">Historial</div>
+  </div>
+
+  <div class="app-content">
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi-mini"><div class="kpi-mini-val" id="k-activas">0</div><div class="kpi-mini-label">Activas</div></div>
+      <div class="kpi-mini"><div class="kpi-mini-val" id="k-criticas" style="color:var(--red)">0</div><div class="kpi-mini-label">Críticas</div></div>
+      <div class="kpi-mini"><div class="kpi-mini-val" id="k-finalizadas" style="color:var(--green)">0</div><div class="kpi-mini-label">Finalizadas</div></div>
+    </div>
+
+    <div id="lista-activas"></div>
+    <div id="lista-historial" style="display:none"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const HAB_COLOR={};
+const MECANICOS_OFICIALES=['Carlos Gonzalez','Daniel Gonzalez','Diego Allende'];
+const SUPABASE_URL = 'https://rifkxfkjtavcqluxiqdx.supabase.co';
+const SUPABASE_KEY = 'TU_ANON_KEY_AQUI';
+
+const ESTADOS = ['pendiente','diagnostico','esperando_repuestos','en_reparacion','finalizado'];
+const ESTADOS_LABEL = {pendiente:'Pendiente',diagnostico:'Diagnóstico',esperando_repuestos:'Esp. repuestos',en_reparacion:'En reparación',finalizado:'Finalizado'};
+
+let mecActual = null;
+let incidencias = [];
+let comentarios = {};
+let tabActual = 'activas';
+
+async function api(path, opts={}) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{})},
+    ...opts
+  });
+  if(!r.ok) throw new Error(await r.text());
+  return r.status===204?null:r.json();
+}
+
+// ── LOGIN ────────────────────────────────────────────────────
+async function cargarMecanicos() {
+  try {
+    const mecs = await api('/mecanicos?select=id,nombre,habilidades&activo=eq.true&order=nombre');
+    document.getElementById('mec-list').innerHTML = mecs.map(m => `
+      <div class="mec-option" onclick="seleccionarMecanico('${m.id}','${m.nombre}','${(m.habilidades||[]).join(',')}')">
+        <div class="mec-option-avatar">${ini(m.nombre)}</div>
+        <div>
+          <div class="mec-option-name" style="display:flex;align-items:center;gap:6px">
+            ${m.nombre}
+            ${MECANICOS_OFICIALES.includes(m.nombre)?'<span style="font-size:10px;background:#6fcf3a22;color:#6fcf3a;border:1px solid #6fcf3a44;padding:1px 7px;border-radius:10px;font-family:IBM Plex Mono,monospace">★ Oficial</span>':''}
+          </div>
+          <div class="mec-option-habs" style="display:flex;flex-wrap:wrap;gap:4px;margin-top:4px">
+            ${(m.habilidades||[]).map(h=>`<span style="padding:1px 6px;border-radius:3px;font-size:10px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;background:${HAB_COLOR[h]||'#555'}22;color:${HAB_COLOR[h]||'#8a9085'};border:1px solid ${HAB_COLOR[h]||'#555'}44">${h}</span>`).join('')}
+          </div>
+        </div>
+      </div>`).join('') || '<div style="color:var(--text3);font-size:12px;text-align:center">No hay mecánicos registrados</div>';
+  } catch(e) { console.error(e); }
+}
+
+function seleccionarMecanico(id, nombre, habs) {
+  mecActual = { id, nombre, habilidades: habs.split(',') };
+  document.getElementById('app-avatar').textContent = ini(nombre);
+  document.getElementById('app-nombre').textContent = nombre;
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  cargarIncidencias();
+}
+
+function cerrarSesion() {
+  mecActual = null;
+  incidencias = [];
+  comentarios = {};
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── INCIDENCIAS ──────────────────────────────────────────────
+async function cargarIncidencias() {
+  try {
+    const rows = await api(`/v_incidencias?mecanico=eq.${encodeURIComponent(mecActual.nombre)}&order=created_at.desc&limit=100&select=*`);
+    incidencias = rows;
+    actualizarKPIs();
+    renderLista();
+  } catch(e) { console.error(e); }
+}
+
+function actualizarKPIs() {
+  const act = incidencias.filter(i=>i.estado!=='finalizado');
+  document.getElementById('k-activas').textContent = act.length;
+  document.getElementById('k-criticas').textContent = act.filter(i=>i.prioridad==='critico').length;
+  document.getElementById('k-finalizadas').textContent = incidencias.filter(i=>i.estado==='finalizado').length;
+}
+
+function switchTab(tab, el) {
+  tabActual = tab;
+  document.querySelectorAll('.app-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('lista-activas').style.display = tab==='activas'?'block':'none';
+  document.getElementById('lista-historial').style.display = tab==='historial'?'block':'none';
+  renderLista();
+}
+
+function renderLista() {
+  const activas  = incidencias.filter(i=>i.estado!=='finalizado');
+  const historial = incidencias.filter(i=>i.estado==='finalizado');
+  const ord = {critico:0,alta:1,media:2,baja:3};
+  activas.sort((a,b)=>(ord[a.prioridad]||0)-(ord[b.prioridad]||0));
+
+  document.getElementById('lista-activas').innerHTML = activas.length
+    ? activas.map(i=>renderCard(i)).join('')
+    : '<div class="empty">No tenés incidencias activas 🎉</div>';
+
+  document.getElementById('lista-historial').innerHTML = historial.length
+    ? historial.map(i=>renderCard(i,true)).join('')
+    : '<div class="empty">Sin historial todavía</div>';
+}
+
+function renderCard(i, finalizada=false) {
+  const eIdx = ESTADOS.indexOf(i.estado);
+  const coms = comentarios[i.id] || [];
+  return `
+  <div class="inc-card ${i.prioridad}" id="card-${i.id}">
+    <div class="inc-card-header" onclick="toggleCard('${i.id}')">
+      <div class="inc-card-top">
+        <div>
+          <div class="inc-equipo">${i.tipo_equipo||i.equipo}</div>
+          ${i.numero_unidad?`<div class="inc-unidad"># ${i.numero_unidad}</div>`:''}
+        </div>
+        <span class="badge ${i.prioridad}">${i.prioridad.toUpperCase()}</span>
+      </div>
+      <div class="inc-meta">${i.objetivo} · ${i.capataz} · ${tRel(i.created_at)}</div>
+      <div class="inc-desc">${i.descripcion}</div>
+      <div style="margin-top:8px"><span class="estado-badge">${ESTADOS_LABEL[i.estado]||i.estado}</span></div>
+    </div>
+    <div class="inc-detail" id="detail-${i.id}">
+      ${!finalizada?`
+      <div class="sec-label">Avanzar estado</div>
+      <div class="estados-flow">
+        ${ESTADOS.map((e,idx)=>`
+          <div class="estado-step ${idx===eIdx?'current':idx<eIdx?'done':''}" onclick="cambiarEstado('${i.id}','${e}')">
+            <div class="step-num">${idx<eIdx?'✓':idx+1}</div>
+            ${ESTADOS_LABEL[e]}
+          </div>`).join('')}
+      </div>
+      ${i.estado!=='finalizado'?`<button class="avanzar-btn" onclick="avanzar('${i.id}','${i.estado}')">Avanzar → ${ESTADOS_LABEL[ESTADOS[eIdx+1]]||''}</button>`:''}
+      `:''}
+      <div class="sec-label">Observaciones</div>
+      <div id="coms-${i.id}">
+        ${coms.length?coms.map(c=>`
+          <div class="comentario-item">
+            <div class="comentario-texto">${c.texto}</div>
+            <div class="comentario-meta">${c.fecha}</div>
+          </div>`).join(''):'<div style="color:var(--text3);font-size:12px;margin-bottom:8px">Sin observaciones</div>'}
+      </div>
+      ${!finalizada?`
+      <textarea class="comentario-input" id="inp-${i.id}" placeholder="Agregá una observación..."></textarea>
+      <button class="send-btn" onclick="agregarComentario('${i.id}')">Agregar observación</button>
+      `:''}
+    </div>
+  </div>`;
+}
+
+function toggleCard(id) {
+  const det = document.getElementById(`detail-${id}`);
+  det.classList.toggle('open');
+  if(det.classList.contains('open')) cargarComentarios(id);
+}
+
+// ── ESTADOS ──────────────────────────────────────────────────
+async function cambiarEstado(id, estado) {
+  const f = {diagnostico:'fecha_diagnostico',esperando_repuestos:'fecha_espera_repuestos',en_reparacion:'fecha_en_reparacion',finalizado:'fecha_finalizado'}[estado];
+  const body = {estado};
+  if(f) body[f] = new Date().toISOString();
+  try {
+    await api(`/incidencias?id=eq.${id}`, {method:'PATCH', body:JSON.stringify(body)});
+    showToast(`→ ${ESTADOS_LABEL[estado]}`);
+    if(estado==='finalizado'){
+      const inc=incidencias.find(i=>i.id===id);
+      if(inc&&inc.capataz_telefono){
+        try{
+          await fetch('https://ecoservice-production.up.railway.app/notificar-finalizado',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+              telefono: inc.capataz_telefono,
+              equipo:   inc.tipo_equipo||inc.equipo,
+              unidad:   inc.numero_unidad,
+              mecanico: mecActual.nombre
+            })
+          });
+        }catch(e){console.warn('No se pudo notificar',e);}
+      }
+    }
+    await cargarIncidencias();
+  } catch(e) { console.error(e); }
+}
+
+async function avanzar(id, estadoActual) {
+  const idx = ESTADOS.indexOf(estadoActual);
+  if(idx < ESTADOS.length-1) await cambiarEstado(id, ESTADOS[idx+1]);
+}
+
+// ── COMENTARIOS ──────────────────────────────────────────────
+async function cargarComentarios(incId) {
+  try {
+    const rows = await api(`/comentarios_incidencias?incidencia_id=eq.${incId}&order=created_at.asc`);
+    comentarios[incId] = rows.map(r=>({texto:r.texto,fecha:new Date(r.created_at).toLocaleString('es-AR')}));
+    const el = document.getElementById(`coms-${incId}`);
+    if(el) el.innerHTML = comentarios[incId].length
+      ? comentarios[incId].map(c=>`<div class="comentario-item"><div class="comentario-texto">${c.texto}</div><div class="comentario-meta">${c.fecha}</div></div>`).join('')
+      : '<div style="color:var(--text3);font-size:12px;margin-bottom:8px">Sin observaciones</div>';
+  } catch(e) { console.error(e); }
+}
+
+async function agregarComentario(incId) {
+  const inp = document.getElementById(`inp-${incId}`);
+  const texto = inp.value.trim();
+  if(!texto) return;
+  try {
+    await api('/comentarios_incidencias', {method:'POST', body:JSON.stringify({incidencia_id:incId, mecanico_nombre:mecActual.nombre, texto})});
+    inp.value = '';
+    showToast('Observación guardada');
+    await cargarComentarios(incId);
+  } catch(e) { console.error(e); }
+}
+
+// ── UTILS ────────────────────────────────────────────────────
+function ini(n){if(!n)return'?';return n.split(' ').map(p=>p[0]).slice(0,2).join('').toUpperCase();}
+function tRel(ts){const d=Date.now()-new Date(ts),m=Math.floor(d/60000);if(m<60)return m+'m';const h=Math.floor(m/60);if(h<24)return h+'h';return Math.floor(h/24)+'d';}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+cargarMecanicos();
+</script>
+</body>
+</html>
